@@ -19,10 +19,17 @@ elseif(isset($_POST['action']) && $_POST['action'] == 'message') {
 	header('Location: wall_forum.php');
 } 
 elseif(isset($_POST['action']) && $_POST['action'] == 'comment') {
-	post_comment($_POST);
-	// var_dump($_SESSION);
 	// var_dump($_POST);
 	// die();
+	post_comment($_POST);
+	header('Location: wall_forum.php');
+} 
+elseif(isset($_POST['action']) && $_POST['action'] == 'delete_message') {
+	delete_message($_POST);
+	header('Location: wall_forum.php');
+} 
+elseif(isset($_POST['action']) && $_POST['action'] == 'delete_comment') {
+	delete_comment($_POST);
 	header('Location: wall_forum.php');
 } 
 else { // Malicious attempts
@@ -56,10 +63,14 @@ function user_registration($post) {
 	if (count($_SESSION['errors']) > 0) {
 		header('Location: wall_login.php');
 	} else {
+		$esc_first_name = escape_this_string($_POST['first_name']);
+		$esc_last_name = escape_this_string($_POST['last_name']);
+		$esc_email = escape_this_string($_POST['email']);
+		$esc_password = escape_this_string($_POST['password']);
 
 		//insert new user into database
 		$query = "INSERT INTO wall.users (first_name, last_name, email, password, created_at, updated_at)
-		 	VALUES ('{$_POST['first_name']}', '{$_POST['last_name']}', '{$_POST['email']}', '{$_POST['password']}', NOW(), NOW())  ";
+		 	VALUES ('{$esc_first_name}', '{$esc_last_name}', '{$esc_email}', '{$esc_password}', NOW(), NOW())  ";
 		run_mysql_query($query);
 
 		//retrieve user id
@@ -95,30 +106,42 @@ function user_login($post) {
 function post_message($post) {
 
 	// insert message into database
-	$query = "INSERT INTO wall.messages (user_id, message, created_at, updated_at) 
+	$query = "INSERT INTO messages (user_id, message, created_at, updated_at) 
 			VALUES ('{$_SESSION['id']}', '{$_POST['content']}', NOW(), NOW()) ";
+	// echo $query;		
 	run_mysql_query($query);
-
-
-
-	// $_SESSION['messages'][] = "<h5>".$_SESSION['first_name']." ".$_SESSION['last_name'].
-	// 	" - ".date('F dS Y')."</h5>".
-	// 	"<p>".$_SESSION['content']."</p>";
-
+	// die();
 }
+
+/** BEGIN MESSAGE DELETION **/
+
+function delete_message($post) {
+	$query = "DELETE FROM comments WHERE comments.message_id = '{$_POST['message_number']}';";
+	run_mysql_query($query);
+	$query = "DELETE FROM messages WHERE messages.id = '{$_POST['message_number']}';";
+	run_mysql_query($query);
+}
+
 
 
 /** BEGIN COMMENT POSTING **/
 
 function post_comment($post) {
-	$number = ($_POST['message_number'] + 1);
+	$number = ($_POST['message_number']);
 
 	// insert post into database
-	$query = "INSERT INTO wall.comments (message_id, user_id, comment, created_at, updated_at) 
+	$query = "INSERT INTO comments (message_id, user_id, comment, created_at, updated_at) 
 			VALUES ('{$number}', '{$_SESSION['id']}', '{$_POST['content']}', NOW(), NOW()) ";
 	run_mysql_query($query);
 }
 
+
+/** BEGIN COMMENT DELETION **/
+
+function delete_comment($post) {
+	$query = "DELETE FROM comments WHERE comments.id = '{$_POST['comment_number']}';";
+	run_mysql_query($query);
+}
 
 
 ?>

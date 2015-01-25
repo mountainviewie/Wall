@@ -74,7 +74,7 @@ require('new-connection.php');
 		<form id="login" action="wall_process.php" method="post">
 			<h2>Login</h2>
 			Email: <input type="text" name="email"><br>
-			Password: <input type="text" name="password"><br>
+			Password: <input type="password" name="password"><br>
 			<input type="submit" value="Login"><br>
 			<input type="hidden" name="action" value="login">
 		</form>
