@@ -9,17 +9,23 @@ require('new-connection.php');
 if(isset($_POST['action']) && $_POST['action'] == 'login') {
 	user_login($_POST);
 
-} elseif(isset($_POST['action']) && $_POST['action'] == 'register') {
+} 
+elseif(isset($_POST['action']) && $_POST['action'] == 'register') {
 	user_registration($_POST);
 
-} elseif(isset($_POST['action']) && $_POST['action'] == 'message') {
-	$_SESSION['content'] = $_POST['content'];
-	post_message($_SESSION);
+} 
+elseif(isset($_POST['action']) && $_POST['action'] == 'message') {
+	post_message($_POST);
 	header('Location: wall_forum.php');
-} elseif(isset($_POST['action']) && $_POST['action'] == 'comment') {
-	user_registration($_POST);
-
-} else { // Malicious attempts
+} 
+elseif(isset($_POST['action']) && $_POST['action'] == 'comment') {
+	post_comment($_POST);
+	// var_dump($_SESSION);
+	// var_dump($_POST);
+	// die();
+	header('Location: wall_forum.php');
+} 
+else { // Malicious attempts
 	session_destroy();
 	header('Location: wall_login.php');
 	die();
@@ -53,11 +59,12 @@ function user_registration($post) {
 
 		//insert new user into database
 		$query = "INSERT INTO wall.users (first_name, last_name, email, password, created_at, updated_at)
-		 VALUES ('{$_POST['first_name']}', '{$_POST['last_name']}', '{$_POST['email']}', '{$_POST['password']}', NOW(), NOW())  ";
+		 	VALUES ('{$_POST['first_name']}', '{$_POST['last_name']}', '{$_POST['email']}', '{$_POST['password']}', NOW(), NOW())  ";
 		run_mysql_query($query);
 
 		//retrieve user id
-		$id = "SELECT id FROM users WHERE email = '{$_POST['email']}' ";
+		$query = "SELECT id FROM users WHERE email = '{$_POST['email']}' ";
+		$id = run_mysql_query($query);
 		$_SESSION['id'] = $id;
 
 		$_SESSION['success'] = "User successfully created!";
@@ -85,13 +92,42 @@ function user_login($post) {
 
 /** BEGIN MESSAGE POSTING **/
 
-function post_message($session) {
-	$_SESSION['messages'][] = "<h5>".$_SESSION['first_name']." ".$_SESSION['last_name'].
-		" - ".date('F dS Y')."</h5>".
-		"<p>".$_SESSION['content']."</p>";
+function post_message($post) {
 
+	// insert message into database
+	$query = "INSERT INTO wall.messages (user_id, message, created_at, updated_at) 
+			VALUES ('{$_SESSION['id']}', '{$_POST['content']}', NOW(), NOW()) ";
+	run_mysql_query($query);
+
+
+
+	// $_SESSION['messages'][] = "<h5>".$_SESSION['first_name']." ".$_SESSION['last_name'].
+	// 	" - ".date('F dS Y')."</h5>".
+	// 	"<p>".$_SESSION['content']."</p>";
+
+}
+
+
+/** BEGIN COMMENT POSTING **/
+
+function post_comment($post) {
+	$number = ($_POST['message_number'] + 1);
+
+	// insert post into database
+	$query = "INSERT INTO wall.comments (message_id, user_id, comment, created_at, updated_at) 
+			VALUES ('{$number}', '{$_SESSION['id']}', '{$_POST['content']}', NOW(), NOW()) ";
+	run_mysql_query($query);
 }
 
 
 
 ?>
+
+
+
+
+
+
+
+
+
